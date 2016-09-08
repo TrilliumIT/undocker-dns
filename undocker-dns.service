@@ -1,0 +1,7 @@
+[Unit]
+Description=undocker dns
+ConditionPathIsDirectory=/var/lib/docker/containers
+ConditionPathExists=/etc/resolv.conf
+
+[Service]
+ExecStart=/usr/local/bin/undocker-dns
