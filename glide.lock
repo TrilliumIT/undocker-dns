@@ -1,12 +1,14 @@
-hash: ce1d2bd4a0563815df6340cfee98224171678ac449acfda89b2a99bb09255a3e
-updated: 2016-09-08T07:50:49.255607765-04:00
+hash: baaf7e2552fde2d10b59e84991a0b7b68360d848a0749294ce309100939aa7ee
+updated: 2017-04-27T08:57:04.993427992-04:00
 imports:
+- name: github.com/fsnotify/fsnotify
+  version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/Sirupsen/logrus
-  version: 08a8a7c27e3d058a8989316a850daad1c10bf4ab
+  version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
 - name: github.com/urfave/cli
-  version: 168c95418e66e019fe17b8f4f5c45aa62ff80e23
+  version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
 - name: golang.org/x/exp
-  version: 14f0c66cee40cf5b17f3ea3a28e0776b816fef2a
+  version: 239d448f23a0d683c1ab7225da01af038355f5e9
   subpackages:
   - inotify
 - name: golang.org/x/sys

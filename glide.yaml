@@ -5,3 +5,4 @@ import:
 - package: golang.org/x/exp
   subpackages:
   - inotify
+- package: github.com/fsnotify/fsnotify

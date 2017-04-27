@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -36,6 +37,7 @@ func main() {
 	}
 }
 
+// Run runs the app
 func Run(ctx *cli.Context) error {
 	log.SetFormatter(&log.TextFormatter{
 		//ForceColors: false,
@@ -88,19 +90,27 @@ func Run(ctx *cli.Context) error {
 		log.Fatal(err)
 	}
 
+	t := time.NewTicker(5 * time.Second)
 	for {
 		select {
 		case ev := <-dirwatcher.Event:
 			log.WithField("event", ev).Debug("Event from dirwatcher")
 			filewatcher.AddWatch(ev.Name+"/resolv.conf", inotify.IN_MODIFY)
 			go fixResolvConf(ev.Name+"/resolv.conf", resolvContent)
+			continue
 		case err := <-dirwatcher.Error:
 			log.WithError(err).Error("Error from dirwatcher")
+			continue
 		case ev := <-filewatcher.Event:
 			log.WithField("event", ev).Debug("Event from filewatcher")
 			go fixResolvConf(ev.Name, resolvContent)
+			continue
 		case err := <-filewatcher.Error:
 			log.WithError(err).Error("Error from filewatcher")
+			continue
+		case err := <-resolvwatcher.Error:
+			log.WithError(err).Error("Error from resolvwatcher")
+			continue
 		case ev := <-resolvwatcher.Event:
 			if ev.Name != "/etc/resolv.conf" {
 				continue
@@ -119,17 +129,18 @@ func Run(ctx *cli.Context) error {
 			log.WithField("content", string(resolvContent)).Debug("/etc/resov.conf content retrieved")
 			log.Debug("/etc/resolv.conf changed")
 			resolvContent = newResolvContent
-			resolvs, err := filepath.Glob("/var/lib/docker/containers/*/resolv.conf")
-			if err != nil {
-				log.WithError(err).Fatal("Failed to list existing resolv.conf files")
+			// Continue below to fix all resolvs
+		case <-t.C:
+			// Continue below to fix all resolvs
+		}
+		resolvs, err := filepath.Glob("/var/lib/docker/containers/*/resolv.conf")
+		if err != nil {
+			log.WithError(err).Fatal("Failed to list existing resolv.conf files")
+		}
+		if resolvs != nil {
+			for _, r := range resolvs {
+				go fixResolvConf(r, resolvContent)
 			}
-			if resolvs != nil {
-				for _, r := range resolvs {
-					go fixResolvConf(r, resolvContent)
-				}
-			}
-		case err := <-resolvwatcher.Error:
-			log.WithError(err).Error("Error from resolvwatcher")
 		}
 	}
 }
