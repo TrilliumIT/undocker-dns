@@ -21,7 +21,7 @@ func fixResolvConf(path string, resolvContent []byte) {
 		return
 	}
 
-	if bytes.Compare(c, resolvContent) == 0 {
+	if bytes.Equal(c, resolvContent) {
 		log.WithField("Path", path).Debug("File already has correct content")
 		return
 	}
