@@ -6,3 +6,4 @@ import:
   subpackages:
   - inotify
 - package: github.com/fsnotify/fsnotify
+- package: github.com/rjeczalik/notify
