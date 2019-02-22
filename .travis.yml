@@ -8,11 +8,11 @@ env:
   - GOOS=linux
 
 before_install:
-- go get github.com/Masterminds/glide
+- curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+- dep ensure
 
 install:
-- "$GOPATH/bin/glide install"
-- go get -t $($GOPATH/bin/glide novendor)
+- go get -t ./...
 
 script:
   - mv $GOPATH/bin/undocker-dns ./

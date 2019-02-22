@@ -1,9 +1,0 @@
-package: github.com/TrilliumIT/undocker-dns
-import:
-- package: github.com/Sirupsen/logrus
-- package: github.com/urfave/cli
-- package: golang.org/x/exp
-  subpackages:
-  - inotify
-- package: github.com/fsnotify/fsnotify
-- package: github.com/rjeczalik/notify
