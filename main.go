@@ -39,12 +39,21 @@ func main() {
 			Usage: "Refresh resolv.conf every n seconds. 0 to disable.",
 			Value: 0,
 		},
+		cli.StringFlag{
+			Name:  "resolvconf, rc",
+			Usage: "resolv.conf file location. Will first try /run/systemd/resolve/resolve.conf then /etc/resolv.conf",
+		},
 	}
 	app.Action = Run
 	err := app.Run(os.Args)
 	if err != nil {
 		panic(err)
 	}
+}
+
+var tryResolvs = []string{
+	"/run/systemd/resolve/resolv.conf",
+	"/etc/resolv.conf",
 }
 
 // Run runs the app
@@ -61,14 +70,24 @@ func Run(ctx *cli.Context) error {
 		log.Info("Debug logging enabled")
 	}
 
-	err := refreshAll(true)
+	resolvconf := ctx.String("resolvconf")
+	if resolvconf == "" {
+		for _, rc := range tryResolvs {
+			resolvconf = rc
+			if _, err := os.Stat(rc); err == nil {
+				break
+			}
+		}
+	}
+
+	err := refreshAll(resolvconf, true)
 	if err != nil {
 		log.WithError(err).Error("Error doing initial refresh")
 		return err
 	}
 
 	resolvEvents := make(chan notify.EventInfo, 8)
-	err = notify.Watch("/etc/resolv.conf", resolvEvents, notify.Write)
+	err = notify.Watch(resolvconf, resolvEvents, notify.Write)
 	if err != nil {
 		log.WithError(err).Error("Failed to resolv.conf notifications")
 		return err
@@ -104,7 +123,7 @@ func Run(ctx *cli.Context) error {
 		for {
 			select {
 			case <-t.C:
-				err = refreshAll(true)
+				err = refreshAll(resolvconf, true)
 				if err != nil {
 					log.WithError(err).Error("Error during scheduled refresh")
 				}
@@ -116,9 +135,9 @@ func Run(ctx *cli.Context) error {
 				go fixResolvConf(ev.Path())
 			case <-resolvEvents:
 				go func() {
-					err = refreshAll(false)
+					err = refreshAll(resolvconf, false)
 					if err != nil {
-						log.WithError(err).Error("Error refreshing after /etc/resolv.conf changed")
+						log.WithError(err).Error("Error refreshing after resolv.conf changed")
 					}
 				}()
 			case <-stop:
@@ -143,15 +162,15 @@ func Run(ctx *cli.Context) error {
 	return nil
 }
 
-func refreshAll(force bool) error {
-	newResolvContent, err := ioutil.ReadFile("/etc/resolv.conf")
+func refreshAll(resolvconf string, force bool) error {
+	newResolvContent, err := ioutil.ReadFile(resolvconf)
 	if err != nil {
-		log.WithError(err).Error("Failed to read /etc/resolv.conf")
+		log.WithError(err).Error("Failed to read resolv.conf")
 		return err
 	}
 	rcl.RLock()
 	if bytes.Equal(newResolvContent, resolvContent) {
-		log.Debug("/etc/resolv.conf unchanged")
+		log.Debug("resolv.conf unchanged")
 		if !force {
 			rcl.RUnlock()
 			return nil
