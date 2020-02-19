@@ -1,13 +1,9 @@
 language: go
 go:
-- 1.11
+- 1.13
 env:
   global:
-  - GO15VENDOREXPERIMENT=1
   - GOOS=linux
-before_install:
-- curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-- dep ensure
 install:
 - go get -t ./...
 script:
