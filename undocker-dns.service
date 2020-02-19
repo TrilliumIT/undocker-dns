@@ -5,3 +5,6 @@ ConditionPathExists=/etc/resolv.conf
 
 [Service]
 ExecStart=/usr/local/bin/undocker-dns
+
+[Install]
+WantedBy=multi-user.target
